@@ -13,14 +13,14 @@
 	}
 #endif
 
-void pauseSnippet(FILE *g, char height[]){
+void snippet(FILE *g, char height[]){
 	fprintf(g, "\n; ####################################################################################################################################\n");
 	fprintf(g, "M117 Print paused for user interaction ; Show message on LCD\n\n");
 	
 	fprintf(g, "G91 ; Use relative coordinates\n");
 	fprintf(g, "G1 Z5 E-1 F2500 ; Move up and relieve nozzle pressure to prevent oozing\n");
 	fprintf(g, "G90 ; Use absolute coordinates\n");
-	fprintf(g, "G1 X180 Y160 ; Move bed to front to enhance piece manipulation\n");
+	fprintf(g, "G1 X0 Y140 ; Move bed to front to enhance piece manipulation\n");
 	fprintf(g, "M84 ; Disable steppers for handling\n");
 	fprintf(g, "M117 Click button to resume ; Show message on LCD\n");
 	fprintf(g, "M0 ; Print paused, resumes with user interaction\n\n");
@@ -34,6 +34,27 @@ void pauseSnippet(FILE *g, char height[]){
 	fprintf(g, "G90 ; Use absolute coordinates\n");
 	fprintf(g, "G92 Z%s ; Restore Z absolute position reference\n", height);
 	fprintf(g, "; ####################################################################################################################################\n");
+}
+
+void pauseSnippet(FILE *g, char height[]){
+	FILE *snippetFile;
+	if((snippetFile = fopen("Snippet.txt","r")) == NULL) {
+		printf("Error al leer el archivo con snippet de pausa.\n");
+		snippet(g, height);
+		printf("Se ha incrustado el fragmento por defecto.\n");
+	}
+	else {
+		char aux;
+		int read;
+		fprintf(g, "\n");
+		do{
+			read = fscanf(snippetFile, "%c", &aux);
+			if (aux != '%') fprintf(g, "%c", aux);
+			else fprintf(g, "%s", height);
+		} while (read == 1);
+		fclose(snippetFile);
+		fprintf(g, "\n");
+	}
 }
 
 int compareHeight(char aux[], float height){
@@ -77,6 +98,7 @@ void welcome(char input[], char output[]){
 	int i=0, j=0;
 	char extension[8];
 	printf("\nEste es un programa que le permite pausar la impresion 3D a cierta altura.\n");
+	printf("A la altura indicada, incrustara el fragmento de gcode que se encuentre en \"Snippet.txt\".\n\n");
 	printf("Introduzca el nombre exacto del archivo original: ");
 	scanf("%s",input);
 	strcpy(output, input);
