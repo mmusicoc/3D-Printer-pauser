@@ -1,9 +1,12 @@
+// Improved version by Oscar Garcia Lorenz
+// Enables cmd execution with pause height as inline argument
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #if __unix__ 
-	#include <stdlib.h>
 	void clear() {
     		system("clear");
 	}
@@ -97,10 +100,6 @@ void pauseRoutine(FILE *f, FILE *g, float height){
 void welcome(char input[], char output[]){
 	int i=0, j=0;
 	char extension[8];
-	printf("\nEste es un programa que le permite pausar la impresion 3D a cierta altura.\n");
-	printf("A la altura indicada, incrustara el fragmento de gcode que se encuentre en \"Snippet.txt\".\n\n");
-	printf("Introduzca el nombre exacto del archivo original: ");
-	scanf("%s",input);
 	strcpy(output, input);
 	do i++;
 	while (output[i]!= '.');
@@ -116,19 +115,45 @@ void welcome(char input[], char output[]){
 	printf("\nEl archivo output se llamara \"%s\".\n\n", output);
 }
 
-int main() {
+int help(char* cmd) {
+	printf("\nEste es un programa que le permite pausar la impresion 3D a cierta altura.\n");
+	printf("A la altura indicada, incrustara el fragmento de gcode que se encuentre en \"Snippet.txt\".\n\n");
+	printf("\nModo de empleo: %s [FICHERO] [ALTURA]", cmd);
+	printf("\nFICHERO: Nombre exacto del archivo original");
+    printf("\nALTURA: Altura a la que debe pausar en mm\n\n");
+}
+
+int main(int argc, char* argv[]) {
+	if (argc != 3) {
+		help(argv[0]);
+		return 0;
+	}
+
 	char inputName[32], outputName[32];
-	float height;
+	float height;	
     FILE *inputFile, *outputFile;
     char values;
 	int action;
+
+	strcpy(inputName, argv[1]);
+	height = atof(argv[2]);
+	
+	struct stat buffer;   
+  	if (stat(inputName, &buffer) != 0) {
+		printf("\nError: El archivo %s no existe.\n\n", inputName);
+		help(argv[0]);
+		return 0;
+	} else if (height == 0.0) {
+		printf("\nError: Altura no valida.\n\n");
+		help(argv[0]);
+		return 0;
+	}
+
 	welcome(inputName, outputName);
-    if((inputFile = fopen(inputName,"r")) == NULL) printf("Error al abrir el archivo.\n");
-    else if((outputFile = fopen(outputName,"w+")) == NULL) printf("Error al generar el archivo.\n");
-    else{
-    	printf("Introduzca la altura a la que debe pausar: ");
-    	scanf("%f", &height);
-		clear();
+
+    if((inputFile = fopen(inputName,"r")) == NULL) printf("\nError al abrir el archivo.\n");
+    else if((outputFile = fopen(outputName,"w+")) == NULL) printf("\nError al generar el archivo.\n");
+    else {
         pauseRoutine(inputFile, outputFile, height);
         fclose(outputFile);
         fclose(inputFile);
