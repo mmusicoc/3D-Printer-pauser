@@ -1,0 +1,20 @@
+####################################################################################################################################
+M117 Print paused for user interaction ; Show message on LCD
+	
+G91 ; Use relative coordinates
+G1 Z5 E-1 F2500 ; Move up and relieve nozzle pressure to prevent oozing
+G90 ; Use absolute coordinates
+G1 X180 Y160 ; Move bed to front to enhance piece manipulation
+M84 ; Disable steppers for handling
+M117 Click button to resume ; Show message on LCD
+M0 ; Print paused, resumes with user interaction
+	
+G28 X Y ; Home XY axes to endstops to retrieve coordinate origin
+G91 ; Use relative coordinates
+G1 Z-5 E+3 F2500 ; Move back to layer and gain nozzle pressure to prevent underextrusion
+M117 Clean the nozzle, then click ; Show message on LCD
+M0 ; Print paused, resumes with user interaction
+	
+G90 ; Use absolute coordinates
+G92 Z% ; Restore Z absolute position reference to pause height
+####################################################################################################################################
